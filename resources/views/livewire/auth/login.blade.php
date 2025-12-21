@@ -1,3 +1,7 @@
+@php
+use Database\Seeders\UserSeeder;
+@endphp
+
 <x-layouts.auth>
     <div class="flex flex-col gap-6">
         <x-auth-header :title="__('Log in to your account')" :description="__('Enter your email and password below to log in')" />
@@ -54,6 +58,16 @@
                 <span>{{ __('Don\'t have an account?') }}</span>
                 <flux:link :href="route('register')" wire:navigate>{{ __('Sign up') }}</flux:link>
             </div>
+        @endif
+        @if (app()->environment('local', 'testing'))
+            <form method="POST" action="{{ route('login.store') }}">
+                @csrf
+                <input type="hidden" name="email" value="{{ UserSeeder::USER_EMAIL }}">
+                <input type="hidden" name="password" value="{{ UserSeeder::USER_PASSWORD }}">
+                <flux:button variant="filled" type="submit" class="w-full">
+                    {{ __('Login as Altrompy') }}
+                </flux:button>
+            </form>
         @endif
     </div>
 </x-layouts.auth>
