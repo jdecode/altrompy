@@ -61,6 +61,46 @@ select:focus[data-flux-control] {
     @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
 }
 
-/* \[:where(&)\]:size-4 {
-    @apply size-4;
-} */
+
+/**
+    Remove the cursor from the collapse button when the sidebar is collapsed
+ */
+
+.data-flux-sidebar-collapsed-desktop\:cursor-e-resize {
+    &[data-flux-sidebar-collapsed-desktop] {
+        cursor: default;
+    }
+}
+
+/**
+    Create the container type (for usage below)
+ */
+ui-sidebar {
+    container-type: inline-size;
+}
+
+/*
+    When sidebar is collapsed:
+    - Show the button (single `moon` icon)
+    - Hide the radio group (of three options)
+*/
+.sidebar-dark-toggle {
+    display: block;
+}
+.sidebar-radio-group {
+    display: none;
+}
+
+/*
+    When the sidebar expands to 40px or more:
+    - Hide the button (single `moon` icon)
+    - Show the radio group (of three options)
+*/
+@container (min-width: 40px) {
+    .sidebar-dark-toggle {
+        display: none;
+    }
+    .sidebar-radio-group {
+        display: block;
+    }
+}
