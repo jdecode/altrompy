@@ -1,19 +1,22 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/livewire-starter-kit",
+    "name": "jdecode/altrompy",
     "type": "project",
-    "description": "The official Laravel starter kit for Livewire.",
+    "description": "Boilerplate for Altron projects",
     "keywords": [
         "laravel",
-        "framework"
+        "altron",
+        "saas-factory"
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
+        "php": "^8.4",
         "laravel/fortify": "^1.30",
         "laravel/framework": "^12.0",
-        "laravel/tinker": "^2.10.1",
-        "livewire/flux": "^2.9.0"
+        "laravel/tinker": "^2.10",
+        "livewire/flux": "^2.10",
+        "livewire/flux-pro": "^2.9",
+        "livewire/livewire": "^4.0@beta"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -21,9 +24,11 @@
         "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.24",
         "laravel/sail": "^1.41",
+        "laravel/telescope": "^5.16",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
         "pestphp/pest": "^4.2",
+        "pestphp/pest-plugin-browser": "^4.1",
         "pestphp/pest-plugin-laravel": "^4.0"
     },
     "autoload": {
@@ -90,5 +95,11 @@
         }
     },
     "minimum-stability": "stable",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "repositories": {
+        "flux-pro": {
+            "type": "composer",
+            "url": "https://composer.fluxui.dev"
+        }
+    }
 }
