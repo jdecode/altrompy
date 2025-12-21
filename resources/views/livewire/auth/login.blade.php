@@ -53,6 +53,19 @@ use Database\Seeders\UserSeeder;
             </div>
         </form>
 
+        @if (Route::has('auth.github.redirect'))
+            <div class="flex items-center">
+                <div class="flex-grow border-t border-zinc-200 dark:border-zinc-700"></div>
+                <div class="mx-4 text-sm text-zinc-500 dark:text-zinc-400">{{ __('Or') }}</div>
+                <div class="flex-grow border-t border-zinc-200 dark:border-zinc-700"></div>
+            </div>
+
+            <flux:button variant="outline" href="{{ route('auth.github.redirect') }}" class="w-full">
+                <flux:icon.github class="size-4 mr-2" />
+                {{ __('Log in with GitHub') }}
+            </flux:button>
+        @endif
+
         @if (Route::has('register'))
             <div class="space-x-1 text-sm text-center rtl:space-x-reverse text-zinc-600 dark:text-zinc-400">
                 <span>{{ __('Don\'t have an account?') }}</span>

@@ -4,8 +4,11 @@ use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
 use App\Livewire\Settings\TwoFactor;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
+use Laravel\Socialite\Facades\Socialite;
 
 Route::get('/', function () {
     return view('welcome');
@@ -33,3 +36,29 @@ Route::middleware(['auth'])->group(function () {
         )
         ->name('two-factor.show');
 });
+
+if (config('services.github.client_id') && config('services.github.client_secret')) {
+    Route::get('/auth/github/redirect', function () {
+        return Socialite::driver('github')
+            ->scopes([
+                'read:user',
+                'user:email',
+            ])
+            ->redirect();
+    })->name('auth.github.redirect');
+
+    Route::get('/auth/github/callback', function () {
+        $user = Socialite::driver('github')->user();
+        $user = User::updateOrCreate(
+            [
+                'email' => strtolower($user->email),
+            ],
+            [
+                'name' => $user->name,
+            ]
+        );
+        Auth::login($user);
+
+        return redirect()->route('dashboard');
+    })->name('auth.github.callback');
+}
