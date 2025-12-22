@@ -55,7 +55,7 @@ if (config('services.github.client_id') && config('services.github.client_secret
             ],
             [
                 'name' => $user->name,
-            ]
+            ],
         );
         Auth::login($user);
 
