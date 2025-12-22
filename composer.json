@@ -80,6 +80,7 @@
             "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
         ],
         "pest": "./vendor/bin/pest --stop-on-error --stop-on-failure --colors --parallel",
+        "pint": "./vendor/bin/pint ",
         "clear": [
             "@php artisan optimize:clear",
             "composer dump-autoload"

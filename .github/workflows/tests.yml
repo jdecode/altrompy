@@ -3,11 +3,9 @@ name: tests
 on:
   push:
     branches:
-      - develop
       - main
   pull_request:
     branches:
-      - develop
       - main
 
 jobs:
@@ -37,9 +35,9 @@ jobs:
 
       - name: Setup
         run: composer setup
-        
-      - name: Linter
-        run: vendor/bin/pint --test
 
-      - name: Tests
-        run: vendor/bin/pest --parallel
+      - name: Pint
+        run: composer pint
+
+      - name: Pest
+        run: composer pest

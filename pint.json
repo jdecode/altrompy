@@ -1,0 +1,25 @@
+{
+    "preset": "per",
+    "rules": {
+        "braces_position": {
+            "anonymous_classes_opening_brace": "next_line_unless_newline_at_signature_end"
+        },
+        "concat_space": {
+            "spacing": "one"
+        },
+        "global_namespace_import": {
+            "import_classes": true
+        },
+        "method_argument_space": {
+            "on_multiline": "ensure_fully_multiline"
+        },
+        "no_unused_imports": true,
+        "operator_linebreak": {
+            "position": "beginning"
+        },
+        "return_type_declaration": {
+            "space_before": "none"
+        },
+        "simplified_null_return": true
+    }
+}
