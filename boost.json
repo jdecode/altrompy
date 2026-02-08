@@ -2,15 +2,26 @@
     "agents": [
         "copilot",
         "gemini",
-        "opencode"
-    ],
-    "editors": [
-        "gemini",
         "opencode",
-        "phpstorm",
-        "vscode"
+        "claude_code",
+        "codex",
+        "junie",
+        "cursor"
     ],
-    "guidelines": [
-        "laravel/fortify"
+    "guidelines": true,
+    "herd_mcp": false,
+    "mcp": true,
+    "packages": [
+        "laravel/fortify",
+        "laravel/ai"
+    ],
+    "sail": false,
+    "skills": [
+        "fluxui-development",
+        "livewire-development",
+        "pest-testing",
+        "tailwindcss-development",
+        "developing-with-ai-sdk",
+        "developing-with-fortify"
     ]
 }
