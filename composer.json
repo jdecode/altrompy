@@ -1,35 +1,38 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
     "name": "jdecode/altrompy",
-    "type": "project",
+    "type": "template",
     "description": "Boilerplate for Altron projects",
     "keywords": [
         "laravel",
         "altron",
-        "saas-factory"
+        "altrompy",
+        "starter-kit",
+        "template",
+        "boilerplate"
     ],
     "license": "MIT",
     "require": {
         "php": "^8.4",
-        "laravel/fortify": "^1.30",
+        "laravel/fortify": "^1.0",
         "laravel/framework": "^12.0",
-        "laravel/socialite": "^5.24",
-        "laravel/tinker": "^2.10",
-        "livewire/flux": "^2.10",
-        "livewire/flux-pro": "^2.9",
-        "livewire/livewire": "^4.0@beta"
+        "laravel/socialite": "^5.0",
+        "laravel/tinker": "^2.0",
+        "livewire/flux": "^2.0",
+        "livewire/flux-pro": "^2.0",
+        "livewire/livewire": "^4.0"
     },
     "require-dev": {
-        "fakerphp/faker": "^1.23",
-        "laravel/boost": "^1.8",
-        "laravel/pail": "^1.2.2",
-        "laravel/pint": "^1.24",
-        "laravel/sail": "^1.41",
-        "laravel/telescope": "^5.16",
-        "mockery/mockery": "^1.6",
-        "nunomaduro/collision": "^8.6",
-        "pestphp/pest": "^4.2",
-        "pestphp/pest-plugin-browser": "^4.1",
+        "fakerphp/faker": "^1.0",
+        "laravel/boost": "^2.0",
+        "laravel/pail": "^1.0",
+        "laravel/pint": "^1.0",
+        "laravel/sail": "^1.0",
+        "laravel/telescope": "^5.0",
+        "mockery/mockery": "^1.0",
+        "nunomaduro/collision": "^8.0",
+        "pestphp/pest": "^4.0",
+        "pestphp/pest-plugin-browser": "^4.0",
         "pestphp/pest-plugin-laravel": "^4.0"
     },
     "autoload": {

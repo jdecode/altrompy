@@ -1,0 +1,267 @@
+name: Code Coverage
+
+on:
+  workflow_dispatch:
+    inputs:
+      coverage_threshold:
+        description: 'Minimum coverage percentage (optional)'
+        required: false
+        default: '70'
+        type: string
+
+jobs:
+  coverage:
+    name: Generate Code Coverage
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      actions: write
+      issues: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, gd, zip
+          coverage: xdebug
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      
+      - name: Setup
+        run: composer setup
+      
+      - name: Seed database
+        run: php artisan db:seed --force
+
+      - name: Install Playwright Browsers
+        run: |
+          npx playwright install chromium --with-deps
+
+      - name: Create coverage directory
+        run: mkdir -p coverage
+
+      - name: Run tests with coverage
+        env:
+          XDEBUG_MODE: coverage
+          APP_URL: http://127.0.0.1:8000
+        run: |
+          # Run tests with coverage, allowing failures so coverage is still generated
+          vendor/bin/pest \
+            --compact \
+            --coverage \
+            --coverage-html=coverage/html \
+            --coverage-clover=coverage/clover.xml \
+            --coverage-cobertura=coverage/cobertura.xml || true
+
+      - name: Extract coverage percentage
+        id: coverage
+        run: |
+          # Extract coverage percentage from clover.xml
+          if [ -f coverage/clover.xml ]; then
+            COVERAGE=$(php -r "
+              \$xml = simplexml_load_file('coverage/clover.xml');
+              if (\$xml && \$xml->project && \$xml->project->metrics) {
+                \$metrics = \$xml->project->metrics;
+                \$statements = (float)\$metrics['statements'];
+                \$coveredstatements = (float)\$metrics['coveredstatements'];
+                if (\$statements > 0) {
+                  echo round((\$coveredstatements / \$statements) * 100, 2);
+                } else {
+                  echo '0';
+                }
+              } else {
+                echo '0';
+              }
+            " 2>/dev/null || echo "0")
+            echo "percentage=$COVERAGE" >> $GITHUB_OUTPUT
+            echo "Coverage: $COVERAGE%"
+          else
+            echo "percentage=0" >> $GITHUB_OUTPUT
+            echo "Coverage file not found"
+          fi
+
+      - name: Generate coverage badge color
+        id: badge
+        run: |
+          COVERAGE=${{ steps.coverage.outputs.percentage }}
+          if (( $(echo "$COVERAGE >= 90" | bc -l) )); then
+            echo "color=brightgreen" >> $GITHUB_OUTPUT
+          elif (( $(echo "$COVERAGE >= 80" | bc -l) )); then
+            echo "color=green" >> $GITHUB_OUTPUT
+          elif (( $(echo "$COVERAGE >= 70" | bc -l) )); then
+            echo "color=greenyellow" >> $GITHUB_OUTPUT
+          elif (( $(echo "$COVERAGE >= 60" | bc -l) )); then
+            echo "color=orange" >> $GITHUB_OUTPUT
+          else
+            echo "color=red" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create coverage summary
+        run: |
+          echo "# Code Coverage Report" > coverage/summary.md
+          echo "" >> coverage/summary.md
+          echo "**Coverage:** ${{ steps.coverage.outputs.percentage }}%" >> coverage/summary.md
+          echo "**Color:** ${{ steps.badge.outputs.color }}" >> coverage/summary.md
+          echo "**Generated:** $(date)" >> coverage/summary.md
+          echo "" >> coverage/summary.md
+          echo "## Badge URL" >> coverage/summary.md
+          echo "\`\`\`" >> coverage/summary.md
+          echo "https://img.shields.io/badge/coverage-${{ steps.coverage.outputs.percentage }}%25-${{ steps.badge.outputs.color }}" >> coverage/summary.md
+          echo "\`\`\`" >> coverage/summary.md
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: |
+            coverage/
+          retention-days: 30
+
+      - name: Comment coverage results
+        run: |
+          echo "## 📊 Code Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Coverage Percentage:** ${{ steps.coverage.outputs.percentage }}%" >> $GITHUB_STEP_SUMMARY
+          echo "- **Badge Color:** ${{ steps.badge.outputs.color }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Threshold:** ${{ github.event.inputs.coverage_threshold || '65' }}%" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "ℹ️ **Note:** Coverage is generated even when some tests fail, ensuring coverage reports are always available." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Badge Markdown" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`markdown" >> $GITHUB_STEP_SUMMARY
+          echo "![Coverage](https://img.shields.io/badge/coverage-${{ steps.coverage.outputs.percentage }}%25-${{ steps.badge.outputs.color }})" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Coverage Reports" >> $GITHUB_STEP_SUMMARY
+          echo "- HTML Report: Available in artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- Clover XML: Available in artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- Cobertura XML: Available in artifacts" >> $GITHUB_STEP_SUMMARY
+
+      - name: Check coverage threshold
+        id: threshold_check
+        if: github.event.inputs.coverage_threshold
+        continue-on-error: true
+        run: |
+          COVERAGE=${{ steps.coverage.outputs.percentage }}
+          THRESHOLD=${{ github.event.inputs.coverage_threshold }}
+
+          echo "coverage_below_threshold=false" >> $GITHUB_OUTPUT
+
+          if (( $(echo "$COVERAGE < $THRESHOLD" | bc -l) )); then
+            echo "❌ Coverage ($COVERAGE%) is below threshold ($THRESHOLD%)"
+            echo "coverage_below_threshold=true" >> $GITHUB_OUTPUT
+            exit 1
+          else
+            echo "✅ Coverage ($COVERAGE%) meets or exceeds threshold ($THRESHOLD%)"
+          fi
+
+      - name: Create coverage improvement issue
+        if: github.event.inputs.coverage_threshold && steps.threshold_check.outputs.coverage_below_threshold == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          COVERAGE=${{ steps.coverage.outputs.percentage }}
+          THRESHOLD=${{ github.event.inputs.coverage_threshold }}
+
+          # Check if an issue with this title already exists
+          EXISTING_ISSUE=$(gh issue list --search "Increase the code coverage by 1%" --state open --json number --jq '.[0].number // empty')
+
+          if [ -n "$EXISTING_ISSUE" ]; then
+            echo "Issue already exists: #$EXISTING_ISSUE"
+            echo "Adding comment to existing issue..."
+            gh issue comment $EXISTING_ISSUE --body "Code coverage check on $(date): **${COVERAGE}%** (threshold: ${THRESHOLD}%)"
+          else
+            echo "Creating new coverage improvement issue..."
+
+            # Create issue body
+            ISSUE_BODY="## Code Coverage Below Threshold
+
+          The latest code coverage analysis shows that our coverage is below the required threshold.
+
+          **Current Coverage:** ${COVERAGE}%
+          **Required Threshold:** ${THRESHOLD}%
+          **Gap:** $(echo "$THRESHOLD - $COVERAGE" | bc -l)%
+
+          ## Action Required
+
+          Please increase the code coverage by at least 1% by:
+
+          1. Adding tests for untested code paths
+          2. Improving existing test coverage
+          3. Removing unused/dead code
+
+          ## Coverage Report
+
+          The detailed coverage report is available in the [workflow artifacts](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
+
+          ---
+          *This issue was automatically created by the code coverage workflow.*"
+
+            # Create the issue and attempt to assign to Copilot
+            echo "Creating issue..."
+            ISSUE_URL=$(gh issue create \
+              --title "Increase the code coverage by 1%" \
+              --body "$ISSUE_BODY" \
+              --label "enhancement")
+
+            # Extract issue number from URL (e.g., https://github.com/owner/repo/issues/123 -> 123)
+            ISSUE_NUMBER=$(echo "$ISSUE_URL" | grep -o '[0-9]\+$')
+
+            echo "Created issue #$ISSUE_NUMBER"
+
+            # Try to assign to copilot user - this may fail if user doesn't exist or have access
+            echo "Attempting to assign issue to @Copilot..."
+            if gh issue edit $ISSUE_NUMBER --add-assignee "copilot" 2>/dev/null; then
+              echo "Successfully assigned issue to @copilot"
+            else
+              echo "Warning: Could not assign issue to @Copilot (user may not exist or have repository access)"
+              # Add a comment mentioning copilot instead
+              gh issue comment $ISSUE_NUMBER --body "cc @Copilot - please review this code coverage improvement request"
+            fi
+
+            echo "Issue created successfully: #$ISSUE_NUMBER"
+          fi
+
+      - name: Update README coverage badge
+        run: |
+          COVERAGE=${{ steps.coverage.outputs.percentage }}
+          COLOR=${{ steps.badge.outputs.color }}
+
+          # Update the coverage badge in README.md
+          sed -i "s|https://img.shields.io/badge/coverage-[0-9.]*%25-[a-z]*|https://img.shields.io/badge/coverage-${COVERAGE}%25-${COLOR}|" README.md
+
+          # Verify the change was made
+          echo "Updated README.md coverage badge:"
+          grep "Code Coverage" README.md
+
+      - name: Commit and push README updates
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+          # Check if README.md has changes
+          if git diff --quiet README.md; then
+            echo "No changes to README.md"
+          else
+            echo "Committing updated coverage badge to README.md"
+            git add README.md
+            git commit -m "chore: update coverage badge to ${{ steps.coverage.outputs.percentage }}% (${{ steps.badge.outputs.color }})"
+            git push
+          fi
