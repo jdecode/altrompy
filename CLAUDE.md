@@ -1,5 +1,5 @@
 <laravel-boost-guidelines>
-    # Laravel Boost Guidelines (Lean v8 Final)
+    # Laravel Boost Guidelines
     
     Follow strictly.
     
