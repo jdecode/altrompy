@@ -1,19 +1,27 @@
 ---
 name: pest-testing
-description: Tests applications using Pest 4 PHP framework.
+description: Tests applications using Pest 4 PHP framework
 ---
 
 # Pest 4
-Testing framework.
+**Apply when**: Creating/modifying tests, debugging, TDD.
 
 ## Documentation
-Use `search-docs`.
+**Docs**: Use `search-docs` for Pest 4 syntax.
 
 ## Usage
-- **Create**: `php artisan make:test --pest Name`.
-- **Locations**: `tests/Feature`, `tests/Unit`, `tests/Browser`.
-- **Run**: `php artisan test --compact`. Filter: `--filter=testName`.
-- **Browser**: Support for browser usage, snapshots, etc.
+- **Create**: `php artisan make:test --pest Name`
+- **Run**: `php artisan test --compact`
+- **Filter**: `php artisan test --filter=testName`
 
 ## Syntax
 `it('does something', function () { expect(true)->toBeTrue(); });`
+
+## Features
+- **Arch**: `arch('controllers')->expect('App\Http\Controllers')->toExtendNothing();`
+- **Describe**: `describe('feature', function() { ... });`
+
+## Best Practices
+- **Mocking**: Use `Event::fake()`, `Queue::fake()`, `Notification::fake()` to speed up tests.
+- **Database**: Use `use RefreshDatabase;` trait.
+- **Expectations**: Use specific expectations (`expect($response)->toBeRedirect()`) rather than generic ones.
